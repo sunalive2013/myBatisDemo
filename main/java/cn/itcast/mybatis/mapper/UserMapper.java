@@ -20,6 +20,8 @@ public interface UserMapper {
 
     public void deleteUser(int id) throws Exception;
 
+    public void updateUser(User user) throws Exception;
+
     public List<UserCustom> findUserList(UserQueryVo userQueryVo) throws Exception;
 
 

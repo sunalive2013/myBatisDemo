@@ -158,4 +158,24 @@ public class UserMapperTest {
         sqlSession.close();
 
     }
+
+
+    @Test
+    public void TestUpdateUser() throws Exception{
+
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        UserMapper userMapper = sqlSession.getMapper(UserMapper.class);
+
+        User user = new User();
+        user.setUsername("郑浩");
+        user.setSex("2");
+        user.setAddress("安徽芜湖");
+
+        System.out.println(user);
+        userMapper.updateUser(user);
+        sqlSession.commit();
+        sqlSession.close();
+
+
+    }
 }

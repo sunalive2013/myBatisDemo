@@ -125,4 +125,27 @@ public class OrdersMapperCustomTest {
         sqlSession.close();
 
     }
+
+
+    //一级缓存测试
+    @Test
+    public void TestCache1() throws Exception{
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        UserMapper userMapper = sqlSession.getMapper(UserMapper.class);
+
+        //第一次发起请求，查询id为1的用户
+        User user1 = userMapper.findByUserId(1);
+        System.out.println(user1);
+
+//        加入commit操作(执行插入更新删除)，清空sqlsession
+        user1.setUsername("测试用户22");
+        userMapper.updateUser(user1);
+        sqlSession.commit();
+
+        //第er次发起请求，查询id为1的用户
+        User user2 = userMapper.findByUserId(1);
+        System.out.println(user2);
+
+
+    }
 }
