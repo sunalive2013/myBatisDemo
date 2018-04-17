@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace命名空间，作用就是对sql进行分类化管理，理解sql隔离
+注意：使用mapper代理方法开发，namespace有特殊重要的作用
+-->
+<mapper namespace="cn.itcast.mybatis.mapper.UserMapper">
+
+    <!--定义sql片段
+        id:该片段的唯一表示
+
+        经验：是基于单标来定义sql片段，可重用性才高;
+        在sql片段中不要包括where
+    -->
+    <sql id="query_user_where">
+
+          <if test="userCustom!=null">
+              <if test="userCustom.sex!=null and userCustom.sex!=''">
+                  and user.sex = #{userCustom.sex}
+              </if>
+              <if test="userCustom.username!=null and userCustom.username!=''">
+                  and user.username LIKE '%${userCustom.username}%'
+              </if>
+          </if>
+        <if test="ids!=null">
+            <!-- 使用 foreach遍历传入ids
+            collection：指定输入 对象中集合属性
+            item：每个遍历生成对象中
+            open：开始遍历时拼接的串
+            close：结束遍历时拼接的串
+            separator：遍历的两个对象中需要拼接的串
+             -->
+            <!-- 使用实现下边的sql拼接：
+             AND (id=1 OR id=10 OR id=16)
+             -->
+            <!--<foreach collection="ids" item="user_id" open="AND (" close=")" separator="or">-->
+                <!--&lt;!&ndash; 每个遍历需要拼接的串 &ndash;&gt;-->
+                <!--id=#{user_id}-->
+            <!--</foreach>-->
+
+            <!-- 实现  “ and id IN(1,10,16)”拼接 -->
+            <!-- <foreach collection="ids" item="user_id" open="and id IN(" close=")" separator=",">
+                每个遍历需要拼接的串
+                #{user_id}
+            </foreach>
+            实现 and in(1,10,16)-->
+            <foreach collection="ids" item="user_id" open="and id in(" close=")" separator=",">
+                #{user_id}
+            </foreach>
+        </if>
+
+    </sql>
+
+
+    <!--
+    定义resultMap
+    将SELECT id id_,username username_ FROM USER 和User类中的属性作一个映射关系
+    type：resultMap最终映射的java对象类型,可以使用别名
+
+    -->
+    <resultMap id="userResultMap" type="User">
+    <!-- id表示查询结果集中唯一标识
+    -->
+        <id column="id_" property="id"/>
+        <result property="username" column="username_" />
+    </resultMap>
+
+<!--用户信息的综合查询-即页面上的高级查询-->
+    <!--#{userCustom.sex}
+         取出包装类型中的性别
+    -->
+    <select id="findUserList" parameterType="cn.itcast.mybatis.po.UserQueryVo"
+            resultType="cn.itcast.mybatis.po.UserCustom">
+
+      SELECT * FROM user
+      <where>
+          <!--<if test="userCustom!=null">-->
+              <!--<if test="userCustom.sex!=null and userCustom.sex!=''">-->
+                  <!--and user.sex = #{userCustom.sex}-->
+              <!--</if>-->
+              <!--<if test="userCustom.username!=null and userCustom.username!=''">-->
+                  <!--and user.username LIKE '%${userCustom.username}%'-->
+              <!--</if>-->
+          <!--</if>-->
+          <include refid="query_user_where" ></include>
+      </where>
+    </select>
+
+    <!--用户信息的综合查询-即页面上的高级查询-->
+    <!--使用hashmap查询
+    -->
+    <select id="findUserByHashmap" parameterType="hashmap" resultType="User">
+        SELECT * FROM user WHERE sex=#{sex} AND username LIKE '%${username}%'
+    </select>
+
+    <!--用户信息的综合查询总数
+        用于分页
+    -->
+    <select id="findUserCount" parameterType="cn.itcast.mybatis.po.UserQueryVo" resultType="int">
+         SELECT COUNT(*) FROM user
+        <where>
+            <!--<if test="userCustom!=null">-->
+                <!--<if test="userCustom.sex!=null and userCustom.sex!=''">-->
+                    <!--and user.sex = #{userCustom.sex}-->
+                <!--</if>-->
+                <!--<if test="userCustom.username!=null and userCustom.username!=''">-->
+                    <!--and user.username LIKE '%${userCustom.username}%'-->
+                <!--</if>-->
+            <!--</if>-->
+            <!--引用sql片段-->
+            <include refid="query_user_where"></include>
+        </where>
+    </select>
+
+    <!--使用resultmap进行输出-->
+    <select id="findUserByResultMap" parameterType="cn.itcast.mybatis.po.UserQueryVo"
+            resultMap="userResultMap" >
+        SELECT id id_,username username_ FROM USER WHERE id=#{value}
+    </select>
+
+
+
+    <select id="findByUserId" parameterType="int" resultType="User">
+        select * from USER where id=#{value}
+    </select>
+
+    <select id="findUserByName" parameterType="String" resultType="cn.itcast.mybatis.po.User">
+        SELECT * FROM USER WHERE username LIKE '%${value}%'
+    </select>
+
+    <!--添加用户-->
+    <insert id="insertUser" parameterType="cn.itcast.mybatis.po.User">
+        <!--
+         将插入数据的主键返回，返回到user对象中
+
+         SELECT LAST_INSERT_ID()：得到刚insert进去记录的主键值，只适用与自增主键
+
+         keyProperty：将查询到主键值设置到parameterType指定的对象的哪个属性
+         order：SELECT LAST_INSERT_ID()执行顺序，相对于insert语句来说它的执行顺序
+         resultType：指定SELECT LAST_INSERT_ID()的结果类型
+          -->
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO user(username,birthday,sex,address) VALUE(#{username},#{birthday},#{sex},#{address})
+    </insert>
+    
+    
+    <!--删除用户-->
+    <delete id="deleteUser" parameterType="java.lang.Integer">
+        DELETE from user where id=#{id}
+    </delete>
+
+
+    <!--更新用户-->
+    <update id="updateUser" parameterType="cn.itcast.mybatis.po.User">
+        UPDATE user set username=#{username},birthday=#{birthday},sex=#{sex},address=#{address}
+        where id=#{id}
+    </update>
+
+
+
+</mapper>
