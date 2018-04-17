@@ -163,7 +163,10 @@
     </select>
 
 
-    <!--配置延迟加载的map-->
+    <!--配置延迟加载的map
+        先去执行findOrdersUserLazyLoading，当需要去查询用户的时候再去执行findByUserId
+
+    -->
     <resultMap id="OrdersUserLazyLoadingResultMap" type="cn.itcast.mybatis.po.Orders" >
         <!--对订单消息进行映射-->
         <id column="id" property="id" />

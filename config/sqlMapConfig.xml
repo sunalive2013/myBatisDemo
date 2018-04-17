@@ -8,10 +8,15 @@
         <!--properties中还可以配置一些属性名和属性值  -->
         <!-- <property name="jdbc.driver" value=""/> -->
     </properties>
-<!--
+
+<!--全局配置参数-->
+    <!--配置懒加载
+        打开延迟加载开关
+    -->
     <settings>
-        <setting name="" value=""/>
-    </settings>-->
+        <setting name="lazyLoadingEnabled" value="true"/>
+        <setting name="aggressiveLazyLoading" value="false"/>
+    </settings>
 
     <typeAliases>
         <!-- 针对单个别名-->
